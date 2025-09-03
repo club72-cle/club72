@@ -1,0 +1,25 @@
+# Staticman site config — tells Staticman how to write files into your repo.
+# Docs for these fields: https://staticman.net/docs/configuration
+
+
+messages:
+name: "Club 72 Chat"
+branch: gh-pages # use your Pages branch (gh-pages or main)
+path: "data/messages" # where each message JSON will be written
+format: json
+extension: json
+filename: "{@timestamp}-{@id}"
+allowedFields: ["text", "handle", "room", "ts"]
+requiredFields: ["text", "ts"]
+transforms:
+text: trim
+generatedFields:
+date:
+type: date
+options:
+format: "timestamp-seconds"
+moderation: false # push directly; set true if you want PR approvals
+commitMessage: "chat: add message via Staticman"
+allowedOrigins: ["YOUR-PAGES-DOMAIN"] # e.g. "yourname.github.io" or custom domain
+reCaptcha:
+enabled: false # flip to true if you add reCAPTCHA
