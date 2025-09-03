@@ -1,0 +1,92 @@
+<!doctype html>
+<form id="composer">
+<textarea id="text" placeholder="Drop your route, meet, wrench tip…" maxlength="600"></textarea>
+<button type="submit">Send</button>
+</form>
+</div>
+
+
+<p class="pill" style="margin:10px 4px 0">Anon handle: <span id="me"></span> • Be cool. Don’t post personal info. No illegal planning.</p>
+</div>
+
+
+<script>
+// ======== CONFIG ========
+const CONFIG = {
+owner: 'YOUR_GITHUB_USERNAME',
+repo: 'YOUR_REPO_NAME',
+branch:'gh-pages', // or 'main' if Pages serves from main
+property:'messages', // must match key in staticman.yml
+staticmanBase:'https://api.staticman.net', // or your self-hosted instance
+feedPath:'data/feed.json',
+pagesBase:`https://raw.githubusercontent.com/`,
+};
+
+
+// ======== UTIL ========
+const $ = sel => document.querySelector(sel);
+const escapeHTML = s => s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m]));
+const now = () => Date.now();
+function randomHandle(){
+const adjs=['midnight','vandal','razor','stealth','onyx','bandit','delta','echo','nova','blitz'];
+const nouns=['rider','ghost','volt','racer','shadow','flux','drift','hound','mach','arc'];
+return adjs[Math.floor(Math.random()*adjs.length)]+'-'+nouns[Math.floor(Math.random()*nouns.length)]+'-'+Math.floor(Math.random()*899+100);
+}
+function getHandle(){
+let h=localStorage.getItem('c72_handle');
+if(!h){h=randomHandle();localStorage.setItem('c72_handle',h)}
+return h;
+}
+$('#me').textContent=getHandle();
+
+
+// ======== FEED (poll + render) ========
+let lastRendered=0;
+async function loadFeed(){
+const url = `${CONFIG.pagesBase}${CONFIG.owner}/${CONFIG.repo}/${CONFIG.branch}/${CONFIG.feedPath}?v=${Date.now()}`;
+try{
+const res = await fetch(url);
+if(!res.ok) throw new Error('feed not found');
+const data = await res.json();
+const cutoff = Date.now() - 24*60*60*1000;
+const msgs = (data.messages||[]).filter(m=>Number(m.ts)>=cutoff).slice(-500);
+if(msgs.length && msgs[msgs.length-1].ts!==lastRendered){
+render(msgs);
+lastRendered=msgs[msgs.length-1].ts;
+}
+$('#status').textContent = `Live: ${msgs.length} msgs`;
+}catch(e){
+$('#status').textContent = 'Feed building…';
+}
+}
+function render(list){
+const el=$('#feed');
+el.innerHTML = list.map(m=>{
+const t=new Date(Number(m.ts));
+const hh=t.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+return `<div class="msg">
+<div class="avatar">${escapeHTML((m.handle||'?')[0].toUpperCase())}</div>
+<div class="bubble">
+<div class="meta"><span class="handle">${escapeHTML(m.handle||'anon')}</span><span>•</span><span>${hh}</span></div>
+<div class="txt">${escapeHTML(m.text||'')}</div>
+</div>
+</div>`
+}).join('');
+el.scrollTop = el.scrollHeight + 200;
+}
+setInterval(loadFeed, 5000);
+loadFeed();
+
+
+// ======== POST (Staticman) ========
+let lastPost = 0;
+$('#composer').addEventListener('submit', async (e)=>{
+e.preventDefault();
+const txt = $('#text').value.trim();
+if(!txt) return;
+const nowTs=now();
+if(nowTs-lastPost<3500){ alert('Easy tiger — tiny cooldown.'); return; }
+lastPost=nowTs;
+
+
+</html>
